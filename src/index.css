@@ -2,41 +2,56 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
+/* Coosajer Fit Store Design System - Corporate Athletic Brand
+All colors MUST be HSL and follow brand guidelines.
 */
 
 @layer base {
   :root {
+    /* Brand Colors - Coosajer Athletic */
+    --brand-blue: 208 100% 25%;         /* #004082 */
+    --brand-blue-900: 199 95% 11%;      /* #021F36 */
+    --brand-blue-700: 198 70% 20%;      /* #0B4058 */
+    --brand-green: 134 44% 37%;         /* #34864A */
+    --brand-green-300: 134 24% 56%;     /* #72AF7E */
+    --brand-border: 210 38% 92%;        /* #E7EEF5 */
+    
+    /* Semantic Design Tokens */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
+    --foreground: 199 95% 11%;          /* brand-blue-900 */
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
+    --card-foreground: 199 95% 11%;
+    --card-border: 210 38% 92%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 134 44% 37%;             /* brand-green */
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 134 44% 30%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --secondary: 208 100% 25%;          /* brand-blue */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-hover: 198 70% 20%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --muted: 210 38% 92%;
+    --muted-foreground: 199 95% 11%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --accent: 208 100% 25%;
+    --accent-foreground: 0 0% 100%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --border: 210 38% 92%;
+    --input: 210 38% 92%;
+    --ring: 134 44% 37%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
+    --radius: 1rem;
+    
+    /* Athletic UI Enhancements */
+    --shadow-soft: 0 1px 3px 0 hsl(210 38% 92% / 0.3);
+    --shadow-medium: 0 4px 6px -1px hsl(210 38% 92% / 0.4);
+    --shadow-strong: 0 10px 15px -3px hsl(210 38% 92% / 0.5);
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 
     --sidebar-background: 0 0% 98%;
 
