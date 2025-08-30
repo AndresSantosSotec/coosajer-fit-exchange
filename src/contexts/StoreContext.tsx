@@ -39,71 +39,13 @@ type StoreAction =
   | { type: 'SET_FILTERS'; payload: Partial<StoreState['filters']> }
   | { type: 'TOGGLE_CART' }
   | { type: 'TOGGLE_TICKET_MODAL' }
-  | { type: 'PROCESS_PURCHASE' };
+  | { type: 'PROCESS_PURCHASE' }
+  | { type: 'SET_BALANCE'; payload: number }; // <-- NUEVA ACCIÓN
 
 const initialState: StoreState = {
-  products: [
-    {
-      id: '1',
-      name: 'Nike Air Max Running',
-      description: 'Zapatillas deportivas con amortiguación avanzada para correr',
-      image: '/api/placeholder/300/300',
-      fitcoins: 45,
-      category: 'Calzado',
-      size: 'M',
-      brand: 'Nike'
-    },
-    {
-      id: '2',
-      name: 'Adidas Performance Camiseta',
-      description: 'Camiseta técnica de alto rendimiento con tecnología Dry-Fit',
-      image: '/api/placeholder/300/300',
-      fitcoins: 25,
-      category: 'Ropa',
-      size: 'L',
-      brand: 'Adidas'
-    },
-    {
-      id: '3',
-      name: 'Under Armour Mancuernas 5kg',
-      description: 'Set de mancuernas con recubrimiento de neopreno antideslizante',
-      image: '/api/placeholder/300/300',
-      fitcoins: 35,
-      category: 'Accesorios',
-      brand: 'Under Armour'
-    },
-    {
-      id: '4',
-      name: 'Puma Training Shorts',
-      description: 'Shorts deportivos con tecnología de secado rápido',
-      image: '/api/placeholder/300/300',
-      fitcoins: 20,
-      category: 'Ropa',
-      size: 'M',
-      brand: 'Puma'
-    },
-    {
-      id: '5',
-      name: 'Reebok Yoga Mat Premium',
-      description: 'Esterilla de yoga antideslizante de 6mm de grosor',
-      image: '/api/placeholder/300/300',
-      fitcoins: 30,
-      category: 'Accesorios',
-      brand: 'Reebok'
-    },
-    {
-      id: '6',
-      name: 'Nike Pro Leggings',
-      description: 'Mallas de compresión para entrenamiento de alta intensidad',
-      image: '/api/placeholder/300/300',
-      fitcoins: 40,
-      category: 'Ropa',
-      size: 'S',
-      brand: 'Nike'
-    }
-  ],
+  products: [],
   cart: [],
-  balance: 250,
+  balance: 0,
   filters: {
     search: '',
     minPrice: 0,
@@ -123,11 +65,11 @@ function storeReducer(state: StoreState, action: StoreAction): StoreState {
       if (existingItem) {
         return {
           ...state,
-          cart: state.cart.map(item =>
-            item.id === action.payload.id
-              ? { ...item, quantity: item.quantity + 1 }
-              : item
-          )
+            cart: state.cart.map(item =>
+              item.id === action.payload.id
+                ? { ...item, quantity: item.quantity + 1 }
+                : item
+            )
         };
       }
       return {
@@ -143,11 +85,13 @@ function storeReducer(state: StoreState, action: StoreAction): StoreState {
     case 'UPDATE_QUANTITY':
       return {
         ...state,
-        cart: state.cart.map(item =>
-          item.id === action.payload.id
-            ? { ...item, quantity: Math.max(0, action.payload.quantity) }
-            : item
-        ).filter(item => item.quantity > 0)
+        cart: state.cart
+          .map(item =>
+            item.id === action.payload.id
+              ? { ...item, quantity: Math.max(0, action.payload.quantity) }
+              : item
+          )
+          .filter(item => item.quantity > 0)
       };
     case 'CLEAR_CART':
       return {
@@ -170,7 +114,10 @@ function storeReducer(state: StoreState, action: StoreAction): StoreState {
         isTicketModalOpen: !state.isTicketModalOpen
       };
     case 'PROCESS_PURCHASE': {
-      const total = state.cart.reduce((sum, item) => sum + (item.fitcoins * item.quantity), 0);
+      const total = state.cart.reduce(
+        (sum, item) => sum + item.fitcoins * item.quantity,
+        0
+      );
       return {
         ...state,
         balance: state.balance - total,
@@ -179,6 +126,10 @@ function storeReducer(state: StoreState, action: StoreAction): StoreState {
         isTicketModalOpen: true
       };
     }
+    case 'SET_BALANCE':
+      // (Opcional) Evitar renders innecesarios si no cambia:
+      if (state.balance === action.payload) return state;
+      return { ...state, balance: action.payload };
     default:
       return state;
   }
@@ -206,3 +157,7 @@ export function useStore() {
   }
   return context;
 }
+
+// (Opcional) Action creators para mayor limpieza:
+export const setBalance = (amount: number): StoreAction => ({ type: 'SET_BALANCE', payload: amount });
+export const processPurchase = (): StoreAction => ({ type: 'PROCESS_PURCHASE' });

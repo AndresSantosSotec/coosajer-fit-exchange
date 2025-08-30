@@ -1,14 +1,40 @@
-import { ShoppingCart, User, Coins } from 'lucide-react';
+"use client";
+
+import { useState, useMemo, useEffect } from 'react';
+import { ShoppingCart, User, Coins, LogOut } from 'lucide-react';
 import { useStore } from '@/contexts/StoreContext';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import LoginDialog from '@/components/auth/LoginDialog';
+import { useWebAuth } from '@/contexts/WebAuthContext';
 
 export function Header() {
   const { state, dispatch } = useStore();
-  
-  const cartItemsCount = state.cart.reduce((total, item) => total + item.quantity, 0);
-  const cartTotal = state.cart.reduce((total, item) => total + (item.fitcoins * item.quantity), 0);
-  const remainingBalance = state.balance - cartTotal;
+  const { user, collaborator, isAuthenticated, logout } = useWebAuth();
+
+  const [loginOpen, setLoginOpen] = useState(false);
+
+  const cartItemsCount = useMemo(
+    () => state.cart.reduce((total, item) => total + item.quantity, 0),
+    [state.cart]
+  );
+  const cartTotal = useMemo(
+    () => state.cart.reduce((total, item) => total + (item.fitcoins * item.quantity), 0),
+    [state.cart]
+  );
+
+  // Balance: si hay sesion, toma del collaborator.fitcoin_account.balance
+  const sessionBalance = collaborator?.fitcoin_account?.balance ?? state.balance;
+  const remainingBalance = sessionBalance - cartTotal;
+
+  // (Opcional recomendado) sincroniza el balance del Store con el del colaborador
+  useEffect(() => {
+    if (typeof collaborator?.fitcoin_account?.balance === "number") {
+      dispatch({ type: "SET_BALANCE" as any, payload: collaborator.fitcoin_account.balance });
+    }
+  }, [collaborator?.fitcoin_account?.balance, dispatch]);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-brand-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -55,10 +81,51 @@ export function Header() {
             )}
           </Button>
 
-          {/* User Profile */}
-          <Button variant="ghost" size="sm">
-            <User className="h-4 w-4" />
-          </Button>
+          {/* User Profile / Login */}
+          {!isAuthenticated ? (
+            <>
+              <Button variant="ghost" size="sm" onClick={() => setLoginOpen(true)}>
+                <User className="h-4 w-4" />
+              </Button>
+              <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
+            </>
+          ) : (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                  <Avatar className="h-6 w-6">
+                    <AvatarImage src={collaborator?.photo_url ?? ""} alt={user?.name ?? "U"} />
+                    <AvatarFallback>{(user?.name?.[0] ?? "U").toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <span className="hidden sm:inline text-sm">{user?.name ?? "Usuario"}</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-64">
+                <DropdownMenuLabel>Mi perfil</DropdownMenuLabel>
+                <div className="px-3 py-2 flex items-center gap-3">
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={collaborator?.photo_url ?? ""} />
+                    <AvatarFallback>{(user?.name?.[0] ?? "U").toUpperCase()}</AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">{user?.name}</p>
+                    <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
+                  </div>
+                </div>
+                <DropdownMenuSeparator />
+                <div className="px-3 py-2 text-sm flex items-center justify-between">
+                  <span>Fitcoins</span>
+                  <span className="font-semibold">{collaborator?.fitcoin_account?.balance ?? 0}</span>
+                </div>
+                <DropdownMenuSeparator />
+                {/* Aquí podrías agregar "Mi historial", "Mis canjes", etc. */}
+                <DropdownMenuItem onClick={() => logout()}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>Cerrar sesión</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
     </header>
