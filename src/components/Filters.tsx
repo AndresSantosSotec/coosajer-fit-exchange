@@ -120,12 +120,12 @@ export function Filters() {
         <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center justify-between">
           <div className="space-y-2">
             <label className="text-sm font-medium text-secondary">Marca</label>
-            <Select value={filters.brand} onValueChange={(value) => updateFilters({ brand: value })}>
+            <Select value={filters.brand} onValueChange={(value) => updateFilters({ brand: value === "all" ? "" : value })}>
               <SelectTrigger className="w-40">
                 <SelectValue placeholder="Todas las marcas" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas las marcas</SelectItem>
+                <SelectItem value="all">Todas las marcas</SelectItem>
                 {brands.map((brand) => (
                   <SelectItem key={brand} value={brand}>{brand}</SelectItem>
                 ))}
