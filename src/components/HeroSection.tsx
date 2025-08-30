@@ -23,7 +23,8 @@ export function HeroSection() {
           
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
             Descubre nuestra selección premium de equipamiento deportivo. 
-            Usa tus Fitcoins para obtener el gear que necesitas para alcanzar tus metas.
+            Usa tus Fitcoins para obtener el premio que necesitas para alcanzar tus metas.
+            Tu esfuerzo no es solo un número, ¡es tu camino hacia la victoria!
           </p>
           
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
