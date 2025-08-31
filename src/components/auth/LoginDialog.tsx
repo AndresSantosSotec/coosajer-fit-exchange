@@ -22,8 +22,7 @@ export default function LoginDialog({ open, onOpenChange, onLoggedIn }: Props) {
   const [err, setErr] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
-  const canSubmit = email.trim().length > 3 && password.trim().length > 3;
-
+  // ✅ Declaración única
   const canSubmit = email.trim().length > 3 && password.trim().length > 3;
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -44,6 +43,8 @@ export default function LoginDialog({ open, onOpenChange, onLoggedIn }: Props) {
       setSubmitting(false);
     }
   };
+
+  const isBusy = submitting || authLoading;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -80,8 +81,8 @@ export default function LoginDialog({ open, onOpenChange, onLoggedIn }: Props) {
 
           {err && <p className="text-sm text-destructive">{err}</p>}
 
-          <Button type="submit" className="w-full" disabled={!canSubmit || submitting || authLoading}>
-            {submitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Entrando...</> : "Entrar"}
+          <Button type="submit" className="w-full" disabled={!canSubmit || isBusy}>
+            {isBusy ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Entrando...</> : "Entrar"}
           </Button>
         </form>
       </DialogContent>

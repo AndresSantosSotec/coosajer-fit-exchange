@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { X, Plus, Minus, ShoppingBag, Coins, Receipt } from 'lucide-react';
 import { useStore } from '@/contexts/StoreContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useState } from 'react';
 
 import LoginDialog from '@/components/auth/LoginDialog';
 import { useWebAuth } from '@/contexts/WebAuthContext';
@@ -16,6 +15,7 @@ export function CartDrawer() {
   const { state, dispatch } = useStore();
   const { cart, balance, isCartOpen } = state;
   const { isAuthenticated } = useWebAuth();
+
   const [loginOpen, setLoginOpen] = useState(false);
 
   const cartTotal = cart.reduce((total, item) => total + (item.fitcoins * item.quantity), 0);
@@ -30,7 +30,6 @@ export function CartDrawer() {
     dispatch({ type: 'REMOVE_FROM_CART', payload: id });
   };
 
-  // ⬇️ Antes despachabas directo; ahora gateamos por login
   const processPurchase = () => {
     dispatch({ type: 'PROCESS_PURCHASE' });
   };
@@ -38,13 +37,9 @@ export function CartDrawer() {
   const handleGenerateTicket = () => {
     if (!isAuthenticated) {
       setLoginOpen(true);
-    } else {
-      processPurchase();
+      return;
     }
-  };
-
-  const closeCart = () => {
-    dispatch({ type: 'TOGGLE_CART' });
+    processPurchase();
   };
 
   const handleSheetOpenChange = (open: boolean) => {
@@ -165,20 +160,23 @@ export function CartDrawer() {
                     </p>
                   )}
 
-                <Button
-                  className="w-full"
-                  disabled={!canProcessPurchase}
-                  onClick={handleGenerateTicket}
-                >
-                  <Receipt className="h-4 w-4 mr-2" />
-                  Generar Ticket
-                </Button>
-              </div>
-            </>
-          )}
-        </div>
-        <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={processPurchase} />
-      </SheetContent>
-    </Sheet>
+                  <Button
+                    className="w-full"
+                    disabled={!canProcessPurchase}
+                    onClick={handleGenerateTicket}
+                  >
+                    <Receipt className="h-4 w-4 mr-2" />
+                    Generar Ticket
+                  </Button>
+                </div>
+              </>
+            )}
+          </div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Dialog de login fuera del Sheet */}
+      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={processPurchase} />
+    </>
   );
 }

@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios, { AxiosHeaders } from 'axios';
 
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
@@ -7,25 +7,32 @@ const api = axios.create({
 });
 
 api.interceptors.request.use((config) => {
+  // Normaliza headers a AxiosHeaders (evita reasignar a {} o {...})
+  const headers = AxiosHeaders.from(config.headers);
+
+  // Bearer token si existe
   const token = localStorage.getItem('auth_token');
   if (token) {
-    config.headers = config.headers ?? {};
-    config.headers.Authorization = `Bearer ${token}`;
+    headers.set('Authorization', `Bearer ${token}`);
   }
 
+  // Content-Type según payload
   if (config.data instanceof FormData) {
-    if (config.headers && 'Content-Type' in config.headers) {
-      delete (config.headers as Record<string, unknown>)['Content-Type'];
-    }
+    // Para FormData no seteamos Content-Type (el navegador maneja el boundary)
+    headers.delete('Content-Type');
   } else {
-    config.headers = { ...config.headers, 'Content-Type': 'application/json' };
+    headers.set('Content-Type', 'application/json');
   }
 
-  if (config.method === 'put' && config.data instanceof FormData) {
+  // PUT con FormData -> _method=PUT y method POST (para Laravel)
+  const method = (config.method ?? 'get').toLowerCase();
+  if (method === 'put' && config.data instanceof FormData) {
     config.data.append('_method', 'PUT');
     config.method = 'post';
   }
 
+  // Asigna los headers normalizados de vuelta
+  config.headers = headers;
   return config;
 });
 
