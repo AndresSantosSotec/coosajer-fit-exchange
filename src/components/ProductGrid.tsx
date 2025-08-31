@@ -53,7 +53,7 @@ export function ProductGrid() {
         }))
 
         setApiProducts(mapped)
-      } catch (e: any) {
+      } catch (e: unknown) {
         console.error(e)
         setError('No se pudieron cargar los premios.')
       } finally {
