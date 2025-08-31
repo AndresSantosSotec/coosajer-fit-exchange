@@ -19,6 +19,7 @@ interface StoreState {
   products: Product[];
   cart: CartItem[];
   balance: number;
+  lastPurchase: CartItem[];
   filters: {
     search: string;
     minPrice: number;
@@ -46,6 +47,7 @@ const initialState: StoreState = {
   products: [],
   cart: [],
   balance: 0,
+  lastPurchase: [],
   filters: {
     search: '',
     minPrice: 0,
@@ -121,6 +123,7 @@ function storeReducer(state: StoreState, action: StoreAction): StoreState {
       return {
         ...state,
         balance: state.balance - total,
+        lastPurchase: state.cart,
         cart: [],
         isCartOpen: false,
         isTicketModalOpen: true

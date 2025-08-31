@@ -6,7 +6,7 @@ import { Separator } from '@/components/ui/separator';
 
 export function TicketModal() {
   const { state, dispatch } = useStore();
-  const { isTicketModalOpen } = state;
+  const { isTicketModalOpen, lastPurchase } = state;
 
   const closeModal = () => {
     dispatch({ type: 'TOGGLE_TICKET_MODAL' });
@@ -21,6 +21,7 @@ export function TicketModal() {
   });
 
   const ticketNumber = `CF-${Date.now().toString().slice(-6)}`;
+  const totalProducts = lastPurchase.reduce((sum, item) => sum + item.quantity, 0);
 
   return (
     <Dialog open={isTicketModalOpen} onOpenChange={closeModal}>
@@ -66,6 +67,32 @@ export function TicketModal() {
                 <span>{currentDate}</span>
               </div>
             </div>
+
+            {lastPurchase.length > 0 && (
+              <>
+                <Separator />
+                <div className="space-y-2">
+                  {lastPurchase.map(item => (
+                    <div key={item.id} className="flex items-center gap-2 text-sm">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-10 h-10 rounded object-cover"
+                      />
+                      <div className="flex-1">
+                        <p className="font-medium">{item.name}</p>
+                        <p className="text-xs text-muted-foreground">Cantidad: {item.quantity}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <Separator />
+                <div className="flex justify-between text-sm font-medium">
+                  <span>Total productos:</span>
+                  <span>{totalProducts}</span>
+                </div>
+              </>
+            )}
 
             <Separator />
 
