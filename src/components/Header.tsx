@@ -32,7 +32,7 @@ export function Header() {
   // (Opcional recomendado) sincroniza el balance del Store con el del colaborador
   useEffect(() => {
     if (typeof collaborator?.fitcoin_account?.balance === "number") {
-      dispatch({ type: "SET_BALANCE" as any, payload: collaborator.fitcoin_account.balance });
+      dispatch({ type: 'SET_BALANCE', payload: collaborator.fitcoin_account.balance });
     }
   }, [collaborator?.fitcoin_account?.balance, dispatch]);
 

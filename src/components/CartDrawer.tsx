@@ -7,33 +7,18 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-
-// ⬇️ NUEVOS imports para auth y login
-import { useWebAuth } from '@/contexts/WebAuthContext';
+import { useState } from 'react';
 import LoginDialog from '@/components/auth/LoginDialog';
+import { useWebAuth } from '@/contexts/WebAuthContext';
 
 export function CartDrawer() {
   const { state, dispatch } = useStore();
   const { cart, balance, isCartOpen } = state;
-
-  // ⬇️ Tomamos estado de autenticación y datos del colaborador
-  const { isAuthenticated, collaborator } = useWebAuth();
-
-  // ⬇️ Control local del modal de login
+  const { isAuthenticated } = useWebAuth();
   const [loginOpen, setLoginOpen] = useState(false);
 
-  const cartTotal = useMemo(
-    () => cart.reduce((total, item) => total + (item.fitcoins * item.quantity), 0),
-    [cart]
-  );
-
-  // ⬇️ Si hay sesión, usamos el balance real del colaborador; si no, el del Store
-  const sessionBalance = useMemo(
-    () => (isAuthenticated ? (collaborator?.fitcoin_account?.balance ?? balance) : balance),
-    [isAuthenticated, collaborator?.fitcoin_account?.balance, balance]
-  );
-
-  const remainingBalance = sessionBalance - cartTotal;
+  const cartTotal = cart.reduce((total, item) => total + (item.fitcoins * item.quantity), 0);
+  const remainingBalance = balance - cartTotal;
   const canProcessPurchase = remainingBalance >= 0 && cart.length > 0;
 
   const updateQuantity = (id: string, newQuantity: number) => {
@@ -51,16 +36,14 @@ export function CartDrawer() {
 
   const handleGenerateTicket = () => {
     if (!isAuthenticated) {
-      setLoginOpen(true); // abrir login si no hay sesión
-      return;
+      setLoginOpen(true);
+    } else {
+      processPurchase();
     }
-    processPurchase(); // si hay sesión, procesar normal
   };
 
-  // ⚠️ Nota: Sheet de shadcn pasa (open:boolean) en onOpenChange; si lo quieres estricto:
-  const handleSheetOpenChange = (open: boolean) => {
-    // cuando el Drawer se cierra (open=false), toggleas el store
-    if (!open) dispatch({ type: 'TOGGLE_CART' });
+  const closeCart = () => {
+    dispatch({ type: 'TOGGLE_CART' });
   };
 
   return (
@@ -175,23 +158,20 @@ export function CartDrawer() {
                     </p>
                   )}
 
-                  <Button 
-                    className="w-full" 
-                    disabled={!canProcessPurchase}
-                    onClick={handleGenerateTicket}  // ⬅️ aquí se hace el gateo por login
-                  >
-                    <Receipt className="h-4 w-4 mr-2" />
-                    Generar Ticket
-                  </Button>
-                </div>
-              </>
-            )}
-          </div>
-        </SheetContent>
-      </Sheet>
-
-      {/* ⬇️ Modal de login */}
-      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} />
-    </>
+                <Button
+                  className="w-full"
+                  disabled={!canProcessPurchase}
+                  onClick={handleGenerateTicket}
+                >
+                  <Receipt className="h-4 w-4 mr-2" />
+                  Generar Ticket
+                </Button>
+              </div>
+            </>
+          )}
+        </div>
+        <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={processPurchase} />
+      </SheetContent>
+    </Sheet>
   );
 }
