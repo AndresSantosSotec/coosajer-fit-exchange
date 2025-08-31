@@ -101,39 +101,72 @@ export function ProductGrid() {
   }, [apiProducts, filters])
 
   return (
-    <section id="products-section" className="py-8">
+    <section id="products-section" className="py-12 bg-gradient-to-b from-background to-muted/20">
       <div className="container px-4">
-        {/* Encabezado */}
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-secondary">Productos disponibles</h2>
-          <div className="text-sm text-muted-foreground">
-            {loading
-              ? 'Cargando...'
-              : `${filteredProducts.length} producto${filteredProducts.length !== 1 ? 's' : ''} encontrado${filteredProducts.length !== 1 ? 's' : ''}`}
+        {/* Enhanced header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-10 gap-4">
+          <div className="space-y-2">
+            <h2 className="text-3xl sm:text-4xl font-bold text-secondary">Productos disponibles</h2>
+            <p className="text-muted-foreground">Descubre todos los premios que puedes obtener</p>
+          </div>
+          <div className="flex items-center gap-3">
+            {loading ? (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <div className="animate-spin h-4 w-4 border-2 border-primary border-t-transparent rounded-full"></div>
+                <span className="text-sm font-medium">Cargando productos...</span>
+              </div>
+            ) : (
+              <div className="bg-primary/10 text-primary px-4 py-2 rounded-full border border-primary/20">
+                <span className="text-sm font-semibold">
+                  {filteredProducts.length} producto{filteredProducts.length !== 1 ? 's' : ''} disponible{filteredProducts.length !== 1 ? 's' : ''}
+                </span>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Error */}
+        {/* Error state with better styling */}
         {error && (
-          <div className="mb-6 text-red-500 text-sm">
-            {error}
+          <div className="mb-8 p-4 bg-destructive/10 border border-destructive/20 rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="h-10 w-10 bg-destructive/20 rounded-full flex items-center justify-center">
+                <Search className="h-5 w-5 text-destructive" />
+              </div>
+              <div>
+                <h3 className="font-semibold text-destructive">Error al cargar productos</h3>
+                <p className="text-sm text-destructive/80">{error}</p>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Grid */}
+        {/* Enhanced grid with better spacing */}
         {!loading && filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filteredProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+            {filteredProducts.map((product, index) => (
+              <div 
+                key={product.id} 
+                className="animate-fade-in"
+                style={{ 
+                  animationDelay: `${index * 0.1}s`,
+                  animationFillMode: 'both'
+                }}
+              >
+                <ProductCard product={product} />
+              </div>
             ))}
           </div>
         ) : !loading ? (
-          <div className="flex flex-col items-center justify-center py-16 text-center space-y-4">
-            <Search className="h-12 w-12 text-muted-foreground" />
-            <h3 className="text-lg font-semibold text-secondary">No se encontraron productos</h3>
-            <p className="text-muted-foreground max-w-md">
-              Intenta ajustar los filtros o buscar con términos diferentes para encontrar lo que necesitas.
-            </p>
+          <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 bg-muted/30 rounded-3xl border border-muted">
+            <div className="h-20 w-20 bg-muted rounded-full flex items-center justify-center">
+              <Search className="h-10 w-10 text-muted-foreground" />
+            </div>
+            <div className="space-y-2 max-w-md">
+              <h3 className="text-2xl font-bold text-secondary">No se encontraron productos</h3>
+              <p className="text-muted-foreground leading-relaxed">
+                Intenta ajustar los filtros o buscar con términos diferentes para encontrar lo que necesitas.
+              </p>
+            </div>
           </div>
         ) : null}
       </div>
