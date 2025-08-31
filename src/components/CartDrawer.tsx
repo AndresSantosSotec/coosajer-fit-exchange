@@ -1,13 +1,18 @@
 import { X, Plus, Minus, ShoppingBag, Coins, Receipt } from 'lucide-react';
 import { useStore } from '@/contexts/StoreContext';
 import { Button } from '@/components/ui/button';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useState } from 'react';
+import LoginDialog from '@/components/auth/LoginDialog';
+import { useWebAuth } from '@/contexts/WebAuthContext';
 
 export function CartDrawer() {
   const { state, dispatch } = useStore();
   const { cart, balance, isCartOpen } = state;
+  const { isAuthenticated } = useWebAuth();
+  const [loginOpen, setLoginOpen] = useState(false);
 
   const cartTotal = cart.reduce((total, item) => total + (item.fitcoins * item.quantity), 0);
   const remainingBalance = balance - cartTotal;
@@ -23,6 +28,14 @@ export function CartDrawer() {
 
   const processPurchase = () => {
     dispatch({ type: 'PROCESS_PURCHASE' });
+  };
+
+  const handleGenerateTicket = () => {
+    if (!isAuthenticated) {
+      setLoginOpen(true);
+    } else {
+      processPurchase();
+    }
   };
 
   const closeCart = () => {
@@ -140,10 +153,10 @@ export function CartDrawer() {
                   </p>
                 )}
 
-                <Button 
-                  className="w-full" 
+                <Button
+                  className="w-full"
                   disabled={!canProcessPurchase}
-                  onClick={processPurchase}
+                  onClick={handleGenerateTicket}
                 >
                   <Receipt className="h-4 w-4 mr-2" />
                   Generar Ticket
@@ -152,6 +165,7 @@ export function CartDrawer() {
             </>
           )}
         </div>
+        <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={processPurchase} />
       </SheetContent>
     </Sheet>
   );
