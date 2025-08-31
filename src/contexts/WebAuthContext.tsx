@@ -126,6 +126,9 @@ export const WebAuthProvider: React.FC<React.PropsWithChildren> = ({ children })
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
+      setUser(null);
+      setCollaborator(null);
+
       const res = await api.post<LoginResponse>("/app/login", { email, password });
       const { user: u, token: t } = res.data;
 
