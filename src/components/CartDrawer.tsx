@@ -10,7 +10,10 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 import LoginDialog from '@/components/auth/LoginDialog';
 import { useWebAuth } from '@/contexts/WebAuthContext';
-import { checkout } from '@/services/checkout';
+import { checkout, type CheckoutResponse } from '@/services/checkout';
+import TicketDialog from '@/components/checkout/TicketDialog';
+import { toast } from '@/components/ui/use-toast';
+import axios from 'axios';
 
 export function CartDrawer() {
   const { state, dispatch } = useStore();
@@ -19,9 +22,11 @@ export function CartDrawer() {
 
   const [loginOpen, setLoginOpen] = useState(false);
   const [creating, setCreating] = useState(false);
-  const [ticket, setTicket] = useState<string | null>(null);
+  const [ticketOpen, setTicketOpen] = useState(false);
+  const [ticketData, setTicketData] = useState<(CheckoutResponse & { items: typeof cart }) | null>(null);
 
-  const cartTotal = cart.reduce((total, item) => total + (item.fitcoins * item.quantity), 0);
+
+  const cartTotal = cart.reduce((total, item) => total + item.fitcoins * item.quantity, 0);
   const remainingBalance = balance - cartTotal;
   const canProcessPurchase = remainingBalance >= 0 && cart.length > 0;
 
@@ -47,12 +52,25 @@ export function CartDrawer() {
         cantidad: c.quantity,
       }));
       const res = await checkout(items /*, "Agencia Central", "Observaciones" */);
-      setTicket(res.ticket_code);
+      setTicketData({ ...res, items: cart });
+      setTicketOpen(true);
       dispatch({ type: 'CLEAR_CART' });
       await refreshData?.();
-      // Aquí puedes abrir un modal mostrando `ticket`
-    } catch (e) {
+    } catch (e: unknown) {
       console.error(e);
+      if (axios.isAxiosError(e) && e.response?.status === 409) {
+        toast({
+          title: 'No se pudo completar la compra',
+          description: e.response.data?.message || 'Saldo o stock insuficiente',
+          variant: 'destructive',
+        });
+      } else {
+        toast({
+          title: 'Error inesperado',
+          description: 'Inténtalo de nuevo más tarde',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setCreating(false);
     }
@@ -197,6 +215,7 @@ export function CartDrawer() {
 
       {/* Dialog de login fuera del Sheet */}
       <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={handleGenerateTicket} />
+      <TicketDialog open={ticketOpen} onOpenChange={setTicketOpen} data={ticketData} />
     </>
   );
 }
