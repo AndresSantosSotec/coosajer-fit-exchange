@@ -24,6 +24,8 @@ export default function LoginDialog({ open, onOpenChange, onLoggedIn }: Props) {
 
   const canSubmit = email.trim().length > 3 && password.trim().length > 3;
 
+  const canSubmit = email.trim().length > 3 && password.trim().length > 3;
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!canSubmit || submitting || authLoading) return;
