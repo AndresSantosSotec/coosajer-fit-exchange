@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { useState } from 'react';
 import LoginDialog from '@/components/auth/LoginDialog';
 import { useWebAuth } from '@/contexts/WebAuthContext';
 
@@ -44,6 +43,12 @@ export function CartDrawer() {
 
   const closeCart = () => {
     dispatch({ type: 'TOGGLE_CART' });
+  };
+
+  const handleSheetOpenChange = (open: boolean) => {
+    if (!open) {
+      dispatch({ type: 'TOGGLE_CART' });
+    }
   };
 
   return (
@@ -166,12 +171,13 @@ export function CartDrawer() {
                   <Receipt className="h-4 w-4 mr-2" />
                   Generar Ticket
                 </Button>
-              </div>
-            </>
-          )}
-        </div>
-        <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={processPurchase} />
-      </SheetContent>
-    </Sheet>
+                </div>
+              </>
+            )}
+          </div>
+          <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={processPurchase} />
+        </SheetContent>
+      </Sheet>
+    </>
   );
 }
