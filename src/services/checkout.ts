@@ -2,6 +2,7 @@ import api from "@/services/api";
 
 type CheckoutItem = { premio_id: number; cantidad: number };
 
+
 export type CheckoutResponse = {
   message: string;
   total: number;
@@ -26,6 +27,7 @@ export type CheckoutResponse = {
   };
 };
 
+
 export async function checkout(
   items: CheckoutItem[],
   agencia_retiro?: string,
@@ -37,4 +39,5 @@ export async function checkout(
     observaciones,
   });
   return data as CheckoutResponse;
+
 }

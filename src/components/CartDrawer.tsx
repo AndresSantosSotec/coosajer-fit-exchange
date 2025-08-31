@@ -25,6 +25,7 @@ export function CartDrawer() {
   const [ticketOpen, setTicketOpen] = useState(false);
   const [ticketData, setTicketData] = useState<(CheckoutResponse & { items: typeof cart }) | null>(null);
 
+
   const cartTotal = cart.reduce((total, item) => total + item.fitcoins * item.quantity, 0);
   const remainingBalance = balance - cartTotal;
   const canProcessPurchase = remainingBalance >= 0 && cart.length > 0;
