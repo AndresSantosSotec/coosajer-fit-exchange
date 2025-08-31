@@ -9,9 +9,8 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('auth_token');
   if (token) {
-    if (config.headers) {
-      config.headers.Authorization = `Bearer ${token}`;
-    }
+    config.headers = config.headers ?? {};
+    config.headers.Authorization = `Bearer ${token}`;
   }
 
   if (config.data instanceof FormData) {
@@ -19,9 +18,7 @@ api.interceptors.request.use((config) => {
       delete (config.headers as Record<string, unknown>)['Content-Type'];
     }
   } else {
-    if (config.headers) {
-      config.headers['Content-Type'] = 'application/json';
-    }
+    config.headers = { ...config.headers, 'Content-Type': 'application/json' };
   }
 
   if (config.method === 'put' && config.data instanceof FormData) {

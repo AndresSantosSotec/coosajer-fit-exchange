@@ -16,17 +16,21 @@ type Props = {
 };
 
 export default function LoginDialog({ open, onOpenChange, onLoggedIn }: Props) {
-  const { login, loading } = useWebAuth();
+  const { login, loading: authLoading } = useWebAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [err, setErr] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const canSubmit = email.trim().length > 3 && password.trim().length > 3;
 
   const canSubmit = email.trim().length > 3 && password.trim().length > 3;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!canSubmit) return;
+    if (!canSubmit || submitting || authLoading) return;
     setErr(null);
+    setSubmitting(true);
     try {
       await login(email, password);
       onOpenChange(false);
@@ -36,6 +40,8 @@ export default function LoginDialog({ open, onOpenChange, onLoggedIn }: Props) {
         ? error.response?.data?.message || error.response?.data?.errors?.email?.[0]
         : undefined;
       setErr(msg || "No se pudo iniciar sesión");
+    } finally {
+      setSubmitting(false);
     }
   };
 
@@ -74,8 +80,8 @@ export default function LoginDialog({ open, onOpenChange, onLoggedIn }: Props) {
 
           {err && <p className="text-sm text-destructive">{err}</p>}
 
-          <Button type="submit" className="w-full" disabled={!canSubmit || loading}>
-            {loading ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Entrando...</> : "Entrar"}
+          <Button type="submit" className="w-full" disabled={!canSubmit || submitting || authLoading}>
+            {submitting ? <><Loader2 className="h-4 w-4 animate-spin mr-2" /> Entrando...</> : "Entrar"}
           </Button>
         </form>
       </DialogContent>
