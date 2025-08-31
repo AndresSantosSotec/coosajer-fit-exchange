@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-import { X, Plus, Minus, ShoppingBag, Coins, Receipt } from 'lucide-react';
+import { X, Plus, Minus, ShoppingBag, Coins, Receipt, Loader2 } from 'lucide-react';
 import { useStore } from '@/contexts/StoreContext';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
@@ -10,13 +10,16 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 import LoginDialog from '@/components/auth/LoginDialog';
 import { useWebAuth } from '@/contexts/WebAuthContext';
+import { checkout } from '@/services/checkout';
 
 export function CartDrawer() {
   const { state, dispatch } = useStore();
   const { cart, balance, isCartOpen } = state;
-  const { isAuthenticated } = useWebAuth();
+  const { isAuthenticated, refreshData } = useWebAuth();
 
   const [loginOpen, setLoginOpen] = useState(false);
+  const [creating, setCreating] = useState(false);
+  const [ticket, setTicket] = useState<string | null>(null);
 
   const cartTotal = cart.reduce((total, item) => total + (item.fitcoins * item.quantity), 0);
   const remainingBalance = balance - cartTotal;
@@ -30,16 +33,29 @@ export function CartDrawer() {
     dispatch({ type: 'REMOVE_FROM_CART', payload: id });
   };
 
-  const processPurchase = () => {
-    dispatch({ type: 'PROCESS_PURCHASE' });
-  };
-
-  const handleGenerateTicket = () => {
+  const handleGenerateTicket = async () => {
     if (!isAuthenticated) {
       setLoginOpen(true);
       return;
     }
-    processPurchase();
+    if (!canProcessPurchase) return;
+
+    try {
+      setCreating(true);
+      const items = cart.map((c) => ({
+        premio_id: Number(c.id),
+        cantidad: c.quantity,
+      }));
+      const res = await checkout(items /*, "Agencia Central", "Observaciones" */);
+      setTicket(res.ticket_code);
+      dispatch({ type: 'CLEAR_CART' });
+      await refreshData?.();
+      // Aquí puedes abrir un modal mostrando `ticket`
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setCreating(false);
+    }
   };
 
   const handleSheetOpenChange = (open: boolean) => {
@@ -162,11 +178,15 @@ export function CartDrawer() {
 
                   <Button
                     className="w-full"
-                    disabled={!canProcessPurchase}
+                    disabled={!canProcessPurchase || creating}
                     onClick={handleGenerateTicket}
                   >
-                    <Receipt className="h-4 w-4 mr-2" />
-                    Generar Ticket
+                    {creating ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    ) : (
+                      <Receipt className="h-4 w-4 mr-2" />
+                    )}
+                    {creating ? 'Procesando...' : 'Generar Ticket'}
                   </Button>
                 </div>
               </>
@@ -176,7 +196,7 @@ export function CartDrawer() {
       </Sheet>
 
       {/* Dialog de login fuera del Sheet */}
-      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={processPurchase} />
+      <LoginDialog open={loginOpen} onOpenChange={setLoginOpen} onLoggedIn={handleGenerateTicket} />
     </>
   );
 }
