@@ -23,24 +23,37 @@ interface TicketDialogProps {
   data: TicketData | null;
 }
 
-function formatDate(date: string) {
-  return new Date(date).toLocaleString('es-ES', {
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
+function formatDate(date?: string) {
+  if (!date) return '-'
+  try {
+    return new Date(date).toLocaleString('es-ES', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+    })
+  } catch {
+    return date
+  }
 }
 
 function makeFilename(data: TicketData) {
-  const d = new Date(data.receipt.datetime);
-  const stamp = d
-    .toISOString()
-    .replace(/[-:]/g, '')
-    .slice(0, 15)
-    .replace('T', '-');
-  return `Ticket-${stamp}-${data.receipt.user.id}-${data.receipt.transaction_id}.pdf`;
+  try {
+    const datetime = data?.receipt?.datetime ?? new Date().toISOString()
+    const d = new Date(datetime)
+    const stamp = d
+      .toISOString()
+      .replace(/[-:]/g, '')
+      .slice(0, 15)
+      .replace('T', '-')
+
+    const userId = data.receipt?.user?.id ?? 'anon'
+    const tx = data.receipt?.transaction_id ?? 'tx'
+    return `Ticket-${stamp}-${userId}-${tx}.pdf`
+  } catch {
+    return `Ticket-${Date.now()}.pdf`
+  }
 }
 
 export default function TicketDialog({ open, onOpenChange, data }: TicketDialogProps) {
@@ -48,7 +61,7 @@ export default function TicketDialog({ open, onOpenChange, data }: TicketDialogP
   const [didAutoDownload, setDidAutoDownload] = useState(false);
 
   useEffect(() => {
-    if (open && data && contentRef.current && !didAutoDownload) {
+    if (open && data && data.receipt && contentRef.current && !didAutoDownload) {
       generatePdfFromNode(contentRef.current, makeFilename(data))
         .catch(() =>
           toast({
@@ -60,7 +73,8 @@ export default function TicketDialog({ open, onOpenChange, data }: TicketDialogP
     }
   }, [open, data, didAutoDownload]);
 
-  if (!data) return null;
+  // Defensive: if there's no data or missing receipt, don't render the dialog content
+  if (!data || !data.receipt) return null;
 
   const handleDownload = async () => {
     if (!contentRef.current) return;
