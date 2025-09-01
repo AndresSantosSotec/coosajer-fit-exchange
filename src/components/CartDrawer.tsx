@@ -25,6 +25,8 @@ export function CartDrawer() {
   const [ticketOpen, setTicketOpen] = useState(false);
   const [ticketData, setTicketData] = useState<(CheckoutResponse & { items: typeof cart }) | null>(null);
 
+  // 🐛 DEBUG: Log del estado del ticket
+  console.log('🔍 CartDrawer render - ticketOpen:', ticketOpen, 'ticketData:', ticketData);
 
   const cartTotal = cart.reduce((total, item) => total + item.fitcoins * item.quantity, 0);
   const remainingBalance = balance - cartTotal;
@@ -39,32 +41,72 @@ export function CartDrawer() {
   };
 
   const handleGenerateTicket = async () => {
+    console.log('🎫 handleGenerateTicket iniciado');
+    
     if (!isAuthenticated) {
+      console.log('❌ Usuario no autenticado, abriendo login');
       setLoginOpen(true);
       return;
     }
-    if (!canProcessPurchase) return;
+    
+    if (!canProcessPurchase) {
+      console.log('❌ No se puede procesar la compra:', { remainingBalance, cartLength: cart.length });
+      return;
+    }
 
     try {
+      console.log('🔄 Iniciando proceso de compra...');
       setCreating(true);
+      
       const items = cart.map((c) => ({
         premio_id: Number(c.id),
         cantidad: c.quantity,
       }));
-      const res = await checkout(items /*, "Agencia Central", "Observaciones" */);
-      setTicketData({ ...res, items: cart });
+      
+      console.log('📦 Items a procesar:', items);
+      console.log('🛒 Cart data:', cart);
+      
+      const res = await checkout(items);
+      
+      // 🐛 DEBUG CRÍTICO: Verificar respuesta del checkout
+      console.log('✅ Checkout response completa:', res);
+      console.log('📄 Estructura de res:', Object.keys(res || {}));
+      console.log('🧾 res.receipt existe?:', !!res?.receipt);
+      if (res?.receipt) {
+        console.log('🧾 Estructura de receipt:', Object.keys(res.receipt));
+      }
+      
+      const finalTicketData = { ...res, items: cart };
+      console.log('🎫 Final ticket data que se va a setear:', finalTicketData);
+      
+      // Setear los datos del ticket
+      setTicketData(finalTicketData);
+      console.log('✅ ticketData seteado');
+      
+      // Abrir el modal del ticket
       setTicketOpen(true);
+      console.log('✅ ticketOpen seteado a true');
+      
+      // Limpiar carrito
       dispatch({ type: 'CLEAR_CART' });
+      console.log('🗑️ Carrito limpiado');
+      
+      // Refrescar datos
       await refreshData?.();
+      console.log('🔄 Datos refrescados');
+      
     } catch (e: unknown) {
-      console.error(e);
+      console.error('❌ Error en handleGenerateTicket:', e);
+      
       if (axios.isAxiosError(e) && e.response?.status === 409) {
+        console.log('⚠️ Error 409 - Conflicto:', e.response.data);
         toast({
           title: 'No se pudo completar la compra',
           description: e.response.data?.message || 'Saldo o stock insuficiente',
           variant: 'destructive',
         });
       } else {
+        console.log('💥 Error inesperado:', e);
         toast({
           title: 'Error inesperado',
           description: 'Inténtalo de nuevo más tarde',
@@ -73,6 +115,7 @@ export function CartDrawer() {
       }
     } finally {
       setCreating(false);
+      console.log('🏁 handleGenerateTicket finalizado');
     }
   };
 
@@ -81,6 +124,13 @@ export function CartDrawer() {
       dispatch({ type: 'TOGGLE_CART' });
     }
   };
+
+  // 🐛 DEBUG: Log antes de renderizar TicketDialog
+  console.log('🎭 Renderizando TicketDialog con props:', {
+    open: ticketOpen,
+    dataExists: !!ticketData,
+    dataKeys: ticketData ? Object.keys(ticketData) : 'null'
+  });
 
   return (
     <>

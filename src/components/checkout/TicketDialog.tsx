@@ -24,7 +24,13 @@ interface TicketDialogProps {
 }
 
 function formatDate(date?: string) {
-  if (!date) return '-'
+  if (!date) return new Date().toLocaleString('es-ES', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  });
   try {
     return new Date(date).toLocaleString('es-ES', {
       year: 'numeric',
@@ -40,17 +46,17 @@ function formatDate(date?: string) {
 
 function makeFilename(data: TicketData) {
   try {
-    const datetime = data?.receipt?.datetime ?? new Date().toISOString()
-    const d = new Date(datetime)
-    const stamp = d
+    const now = new Date();
+    const stamp = now
       .toISOString()
       .replace(/[-:]/g, '')
       .slice(0, 15)
-      .replace('T', '-')
+      .replace('T', '-');
 
-    const userId = data.receipt?.user?.id ?? 'anon'
-    const tx = data.receipt?.transaction_id ?? 'tx'
-    return `Ticket-${stamp}-${userId}-${tx}.pdf`
+    // Usar datos de canjes si están disponibles
+    const firstCanje = data.canjes?.[0];
+    const userId = firstCanje?.user_id ?? 'user';
+    return `Ticket-${stamp}-${userId}.pdf`
   } catch {
     return `Ticket-${Date.now()}.pdf`
   }
@@ -60,30 +66,94 @@ export default function TicketDialog({ open, onOpenChange, data }: TicketDialogP
   const contentRef = useRef<HTMLDivElement>(null);
   const [didAutoDownload, setDidAutoDownload] = useState(false);
 
+  // 🐛 DEBUG: Log inicial del componente
+  console.log('🎭 TicketDialog render - Props recibidas:', {
+    open,
+    dataExists: !!data,
+    data: data ? {
+      keys: Object.keys(data),
+      hasItems: !!data.items,
+      itemsLength: data.items?.length,
+      hasCanjes: !!data.canjes,
+      canjesLength: data.canjes?.length
+    } : 'null'
+  });
+
+  // ✅ NUEVA LÓGICA: Solo verificar que existan data e items
+  const shouldReturnNull = !data || !data.items || data.items.length === 0;
+  console.log('🚨 TicketDialog - shouldReturnNull:', shouldReturnNull, {
+    noData: !data,
+    noItems: data ? !data.items : 'data is null',
+    emptyItems: data?.items ? data.items.length === 0 : 'no items'
+  });
+
   useEffect(() => {
-    if (open && data && data.receipt && contentRef.current && !didAutoDownload) {
+    console.log('🔄 TicketDialog useEffect ejecutado:', {
+      open,
+      dataExists: !!data,
+      hasItems: data ? !!data.items : false,
+      hasContentRef: !!contentRef.current,
+      didAutoDownload
+    });
+
+    if (open && data && data.items && contentRef.current && !didAutoDownload) {
+      console.log('📄 Intentando generar PDF automáticamente...');
       generatePdfFromNode(contentRef.current, makeFilename(data))
-        .catch(() =>
+        .then(() => {
+          console.log('✅ PDF generado exitosamente');
+          toast({
+            title: 'Ticket descargado',
+            description: 'El PDF del ticket se ha descargado automáticamente',
+          });
+        })
+        .catch((error) => {
+          console.error('❌ Error al generar PDF:', error);
           toast({
             title: 'No se pudo descargar el PDF automáticamente',
+            description: 'Puedes intentar descargarlo manualmente',
             variant: 'destructive',
           })
-        )
-        .finally(() => setDidAutoDownload(true));
+        })
+        .finally(() => {
+          console.log('🏁 setDidAutoDownload(true)');
+          setDidAutoDownload(true);
+        });
     }
   }, [open, data, didAutoDownload]);
 
-  // Defensive: if there's no data or missing receipt, don't render the dialog content
-  if (!data || !data.receipt) return null;
+  // 🐛 DEBUG: Log antes del return null
+  if (shouldReturnNull) {
+    console.log('🚫 TicketDialog retornando null debido a:', {
+      noData: !data,
+      noItems: data ? !data.items : 'data is null',
+      emptyItems: data?.items ? data.items.length === 0 : 'no items'
+    });
+    return null;
+  }
 
   const handleDownload = async () => {
-    if (!contentRef.current) return;
+    console.log('📥 handleDownload ejecutado');
+    if (!contentRef.current) {
+      console.log('❌ No hay contentRef.current');
+      return;
+    }
     try {
       await generatePdfFromNode(contentRef.current, makeFilename(data));
-    } catch {
+      console.log('✅ Descarga manual exitosa');
+      toast({
+        title: 'Ticket descargado',
+        description: 'El PDF se ha descargado correctamente',
+      });
+    } catch (error) {
+      console.error('❌ Error en descarga manual:', error);
       toast({ title: 'No se pudo descargar el PDF', variant: 'destructive' });
     }
   };
+
+  console.log('🎭 TicketDialog renderizando contenido del modal');
+
+  // Obtener información del primer canje para mostrar detalles del usuario
+  const firstCanje = data.canjes?.[0];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -93,13 +163,14 @@ export default function TicketDialog({ open, onOpenChange, data }: TicketDialogP
         </DialogHeader>
         <div ref={contentRef} className="space-y-4">
           <div className="text-sm text-muted-foreground space-y-1">
-            <p>Fecha: {formatDate(data.receipt.datetime)}</p>
-            {data.receipt.user && (
-              <p>
-                Usuario: {data.receipt.user.name} ({data.receipt.user.email})
-              </p>
+            <p>Fecha: {formatDate()}</p>
+            {firstCanje && (
+              <>
+                <p>Usuario ID: {firstCanje.user_id}</p>
+                <p>Colaborador ID: {firstCanje.colaborator_id}</p>
+              </>
             )}
-            {data.receipt.agency && <p>Agencia: {data.receipt.agency}</p>}
+            <p>Estado: {data.message}</p>
           </div>
 
           <Table>
@@ -112,8 +183,8 @@ export default function TicketDialog({ open, onOpenChange, data }: TicketDialogP
               </TableRow>
             </TableHeader>
             <TableBody>
-              {data.items.map((item) => (
-                <TableRow key={item.id}>
+              {data.items.map((item, index) => (
+                <TableRow key={item.id || index}>
                   <TableCell>{item.name}</TableCell>
                   <TableCell className="text-right">{item.quantity}</TableCell>
                   <TableCell className="text-right">{item.fitcoins}</TableCell>

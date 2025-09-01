@@ -1,4 +1,5 @@
 import api from "@/services/api";
+import { ReactNode } from "react";
 
 type CheckoutItem = { premio_id: number; cantidad: number };
 
@@ -8,6 +9,8 @@ export type CheckoutResponse = {
   total: number;
   balance: number;
   canjes: {
+    colaborator_id: ReactNode;
+    user_id: string;
     id: number;
     premio_id: number;
     cantidad: number;
