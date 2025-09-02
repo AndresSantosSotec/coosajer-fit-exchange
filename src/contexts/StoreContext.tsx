@@ -51,7 +51,7 @@ const initialState: StoreState = {
   filters: {
     search: '',
     minPrice: 0,
-    maxPrice: 100,
+    maxPrice: 10000,
     categories: [],
     sizes: [],
     brand: ''
