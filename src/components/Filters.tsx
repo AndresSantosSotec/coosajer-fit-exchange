@@ -31,6 +31,7 @@ export function Filters() {
     updateFilters({ sizes: newSizes });
   };
 
+
   const clearAllFilters = () => {
     updateFilters({
       search: '',
