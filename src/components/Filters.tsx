@@ -73,7 +73,7 @@ export function Filters() {
               type="number"
               placeholder="Max"
               value={filters.maxPrice || ''}
-              onChange={(e) => updateFilters({ maxPrice: Number(e.target.value) || 100 })}
+              onChange={(e) => updateFilters({ maxPrice: Number(e.target.value) || 3000 })}
               className="w-20"
             />
             <span className="flex items-center text-sm text-muted-foreground">FC</span>
