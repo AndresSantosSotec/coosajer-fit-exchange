@@ -43,7 +43,7 @@ export function Filters() {
   };
 
   const hasActiveFilters = filters.search || filters.categories.length > 0 || 
-    filters.sizes.length > 0 || filters.brand || filters.minPrice > 0 || filters.maxPrice < 100;
+    filters.sizes.length > 0 || filters.brand || filters.minPrice > 0 || filters.maxPrice < 10000;
 
   return (
     <div className="border-b border-brand-border bg-background p-4">
@@ -73,7 +73,7 @@ export function Filters() {
               type="number"
               placeholder="Max"
               value={filters.maxPrice || ''}
-              onChange={(e) => updateFilters({ maxPrice: Number(e.target.value) || 3000 })}
+              onChange={(e) => updateFilters({ maxPrice: Number(e.target.value) || 10000 })}
               className="w-20"
             />
             <span className="flex items-center text-sm text-muted-foreground">FC</span>
